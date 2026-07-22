@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영어 단어 학습기</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#faf5ff; --card:#ffffff;
+    --ink:#1e1b4b; --sub:#64748b; --line:#e5e7eb;
+    --accent:#6366f1; --accent2:#8b5cf6; --accent-soft:#eef2ff;
+    --good:#10b981; --shadow:0 20px 50px -20px rgba(79,70,229,.35);
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Segoe UI","Malgun Gothic",system-ui,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%,var(--bg2),transparent),
+               radial-gradient(1000px 500px at -10% 110%,#e0e7ff,transparent),
+               linear-gradient(160deg,var(--bg1),#fdfbff);
+    color:var(--ink); min-height:100%;
+    display:flex; flex-direction:column; align-items:center;
+    padding:32px 16px 60px;
+  }
+  .wrap{width:100%; max-width:720px}
+  header{text-align:center; margin-bottom:22px}
+  header h1{font-size:26px; letter-spacing:-.5px; display:flex; gap:10px; justify-content:center; align-items:center}
+  header .logo{
+    width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:#fff;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 8px 20px -6px rgba(99,102,241,.6); font-weight:800; font-size:20px;
+  }
+  header p{color:var(--sub); margin-top:8px; font-size:14px}
+
+  .searchbar{
+    display:flex; gap:10px; background:var(--card); padding:8px;
+    border-radius:16px; box-shadow:var(--shadow); border:1px solid #eceafd;
+  }
+  .searchbar input{
+    flex:1; border:none; outline:none; font-size:18px; padding:12px 14px;
+    background:transparent; color:var(--ink);
+  }
+  .searchbar button{
+    border:none; cursor:pointer; color:#fff; font-size:16px; font-weight:700;
+    padding:0 22px; border-radius:11px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    transition:transform .08s ease, filter .2s;
+  }
+  .searchbar button:hover{filter:brightness(1.07)}
+  .searchbar button:active{transform:scale(.97)}
+
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; justify-content:center}
+  .chips span{
+    cursor:pointer; font-size:13px; color:var(--accent); background:var(--accent-soft);
+    padding:6px 12px; border-radius:999px; border:1px solid #e0e7ff; transition:.15s;
+  }
+  .chips span:hover{background:#e0e7ff}
+
+  /* 즐겨찾기 / 최근 검색 패널 */
+  .lists{margin-top:16px; display:flex; flex-direction:column; gap:12px}
+  .listgroup{
+    background:var(--card); border:1px solid #eceafd; border-radius:14px;
+    padding:12px 14px; box-shadow:0 10px 30px -22px rgba(79,70,229,.5);
+  }
+  .list-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:9px}
+  .list-title{font-size:12px; font-weight:800; color:var(--sub); letter-spacing:.3px}
+  .mini-btn{
+    border:none; background:transparent; color:#94a3b8; font-size:12px; cursor:pointer;
+    padding:3px 8px; border-radius:7px; transition:.15s;
+  }
+  .mini-btn:hover{background:#fee2e2; color:#ef4444}
+  .wordchips{display:flex; flex-wrap:wrap; gap:8px}
+  .wc{
+    display:inline-flex; align-items:center; gap:4px; cursor:pointer; font-size:13.5px; font-weight:600;
+    color:var(--ink); background:#f8fafc; border:1px solid #e5e7eb;
+    padding:5px 5px 5px 13px; border-radius:999px; transition:.15s;
+  }
+  .wc:hover{background:#eef2ff; border-color:#c7d2fe}
+  .wc.fav{background:#fffbeb; border-color:#fde68a}
+  .wc.fav:hover{background:#fef3c7}
+  .wc .rm{
+    width:19px; height:19px; border-radius:50%; display:grid; place-items:center;
+    font-size:14px; line-height:1; color:#b6bec9; transition:.12s;
+  }
+  .wc .rm:hover{background:#fecaca; color:#ef4444}
+  .reco{margin-top:16px; text-align:center}
+  .reco-title{font-size:12px; font-weight:700; color:#94a3b8; margin-bottom:8px}
+
+  .card{
+    margin-top:24px; background:var(--card); border-radius:22px; overflow:hidden;
+    box-shadow:var(--shadow); border:1px solid #efeafe; display:none;
+    animation:pop .35s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes pop{from{opacity:0; transform:translateY(14px) scale(.98)} to{opacity:1; transform:none}}
+
+  .imgbox{
+    position:relative; height:230px; background:#f1f5f9;
+    display:grid; place-items:center; overflow:hidden;
+  }
+  .imgbox img{width:100%; height:100%; object-fit:cover}
+  .imgbox .ph{color:#94a3b8; font-size:14px; display:flex; flex-direction:column; align-items:center; gap:8px}
+  .imgbox .ph .big{font-size:44px}
+
+  .body{padding:22px 24px 24px}
+  .wordrow{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .word{font-size:32px; font-weight:800; letter-spacing:-.5px}
+  .phon{color:var(--sub); font-size:17px}
+  .wr-actions{margin-left:auto; display:flex; gap:8px; align-items:center}
+  .starbtn{
+    border:none; cursor:pointer; width:46px; height:46px; border-radius:50%;
+    background:var(--accent-soft); color:#cbd5e1; font-size:23px; display:grid; place-items:center;
+    transition:.15s;
+  }
+  .starbtn:hover{background:#e0e7ff; transform:scale(1.05)}
+  .starbtn.on{color:#f59e0b; background:#fff7ed}
+  .speak{
+    border:none; cursor:pointer; width:46px; height:46px; border-radius:50%;
+    background:var(--accent-soft); color:var(--accent); font-size:20px; display:grid; place-items:center;
+    transition:.15s;
+  }
+  .speak:hover{background:#e0e7ff; transform:scale(1.05)}
+  .speak.playing{animation:pulse .8s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.4)} 50%{box-shadow:0 0 0 8px rgba(99,102,241,0)}}
+
+  .section{margin-top:20px}
+  .label{
+    font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
+    color:var(--accent); margin-bottom:7px; display:flex; align-items:center; gap:6px;
+  }
+  .pos{
+    display:inline-block; font-size:12px; font-weight:700; color:#7c3aed;
+    background:#f3e8ff; padding:2px 9px; border-radius:6px; margin-bottom:6px;
+  }
+  .def{font-size:16px; line-height:1.6; color:#334155}
+  .example{
+    font-size:16px; line-height:1.6; color:#334155; font-style:italic;
+    background:#f8fafc; border-left:3px solid var(--accent2); padding:12px 14px; border-radius:0 10px 10px 0;
+  }
+  .example b{background:linear-gradient(transparent 60%,#ddd6fe 60%); font-style:normal; color:var(--ink)}
+
+  /* 한글 뜻 가림막 */
+  .ko-wrap{
+    margin-top:22px; position:relative; border-radius:14px; overflow:hidden;
+    border:1px solid #e5e7eb;
+  }
+  .ko-inner{padding:18px 16px; text-align:center; background:#f8fafc}
+  .ko-inner .lab{font-size:12px; font-weight:700; color:var(--sub); margin-bottom:6px}
+  .ko-text{font-size:22px; font-weight:800; color:var(--ink); transition:filter .35s ease}
+  .ko-cover{
+    position:absolute; inset:0; cursor:pointer; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:4px; color:#fff; font-weight:700;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    transition:opacity .4s ease; user-select:none;
+  }
+  .ko-cover small{font-weight:500; opacity:.85; font-size:12px}
+  .ko-cover .eye{font-size:26px}
+  .ko-wrap.revealed .ko-cover{opacity:0; pointer-events:none}
+  .ko-wrap.revealed .ko-text{filter:none}
+  .ko-text{filter:blur(9px)}
+
+  .status{text-align:center; color:var(--sub); font-size:14px; margin-top:26px; display:none}
+  .spinner{
+    width:26px;height:26px;border-radius:50%;border:3px solid #e0e7ff;border-top-color:var(--accent);
+    animation:spin .8s linear infinite; margin:0 auto 10px;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  footer{margin-top:30px; color:#94a3b8; font-size:12px; text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="logo">A</span> 영어 단어 학습기</h1>
+    <p>단어를 입력하면 그림 · 뜻 · 발음 · 예문이 나와요. 맨 아래를 클릭하면 한글 뜻이 보여요 👀</p>
+  </header>
+
+  <div class="searchbar">
+    <input id="word" type="text" placeholder="영어 단어를 입력하세요  (예: apple)" autocomplete="off" spellcheck="false" autofocus>
+    <button id="go">찾기</button>
+  </div>
+  <div class="lists">
+    <div class="listgroup" id="fav-group" style="display:none">
+      <div class="list-head">
+        <span class="list-title">⭐ 즐겨찾기</span>
+        <button class="mini-btn" id="clear-fav">전체 삭제</button>
+      </div>
+      <div class="wordchips" id="fav-list"></div>
+    </div>
+    <div class="listgroup" id="hist-group" style="display:none">
+      <div class="list-head">
+        <span class="list-title">🕘 최근 검색</span>
+        <button class="mini-btn" id="clear-hist">기록 지우기</button>
+      </div>
+      <div class="wordchips" id="hist-list"></div>
+    </div>
+  </div>
+
+  <div class="reco">
+    <div class="reco-title">💡 추천 단어</div>
+    <div class="chips" id="chips">
+      <span>apple</span><span>curious</span><span>journey</span><span>brave</span>
+      <span>ocean</span><span>whisper</span><span>gratitude</span>
+    </div>
+  </div>
+
+  <div class="status" id="status"><div class="spinner"></div>불러오는 중...</div>
+
+  <div class="card" id="card">
+    <div class="imgbox" id="imgbox"></div>
+    <div class="body">
+      <div class="wordrow">
+        <div class="word" id="w-word">word</div>
+        <div class="phon" id="w-phon"></div>
+        <div class="wr-actions">
+          <button class="starbtn" id="star" title="즐겨찾기에 추가">☆</button>
+          <button class="speak" id="speak" title="발음 듣기">🔊</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="label">📖 영어 정의</div>
+        <div id="w-pos"></div>
+        <div class="def" id="w-def"></div>
+      </div>
+
+      <div class="section" id="ex-sec">
+        <div class="label">✍️ 예문</div>
+        <div class="example" id="w-ex"></div>
+      </div>
+
+      <div class="ko-wrap" id="kowrap">
+        <div class="ko-inner">
+          <div class="lab">한글 뜻</div>
+          <div class="ko-text" id="w-ko">...</div>
+        </div>
+        <div class="ko-cover" id="kocover">
+          <span class="eye">👀</span>
+          여기를 클릭해서 한글 뜻 확인하기
+          <small>먼저 스스로 뜻을 떠올려 보세요!</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>인터넷 연결이 필요해요 · 무료 사전/번역/이미지 API 사용</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let currentWord = "", currentAudio = "";
+
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+// ---------- 즐겨찾기 & 검색 기록 (localStorage 저장) ----------
+const FAV_KEY="vocab_favorites", HIST_KEY="vocab_history";
+function loadArr(key){ try{ return JSON.parse(localStorage.getItem(key)) || [] }catch(e){ return [] } }
+function saveArr(key,val){ try{ localStorage.setItem(key, JSON.stringify(val)) }catch(e){} }
+let favorites = loadArr(FAV_KEY);   // [{word, ko}]
+let history   = loadArr(HIST_KEY);  // [word, ...]  최신순
+
+function isFav(w){ return favorites.some(f=>f.word===w); }
+
+function toggleFav(){
+  const w = (currentWord||"").toLowerCase();
+  if(!w) return;
+  if(isFav(w)){
+    favorites = favorites.filter(f=>f.word!==w);
+  }else{
+    const ko = $("w-ko").textContent;
+    favorites.unshift({word:w, ko:(ko && ko!=="..." ? ko : "")});
+  }
+  saveArr(FAV_KEY, favorites);
+  updateStar(); renderFav();
+}
+
+function updateStar(){
+  const b = $("star");
+  const on = isFav((currentWord||"").toLowerCase());
+  b.textContent = on ? "★" : "☆";
+  b.classList.toggle("on", on);
+  b.title = on ? "즐겨찾기에서 빼기" : "즐겨찾기에 추가";
+}
+
+function addHistory(w){
+  w = (w||"").toLowerCase();
+  if(!w) return;
+  history = history.filter(x=>x!==w);
+  history.unshift(w);
+  if(history.length>24) history = history.slice(0,24);
+  saveArr(HIST_KEY, history);
+  renderHist();
+}
+
+function makeChip(word, opts){
+  opts = opts||{};
+  const wc = document.createElement("span");
+  wc.className = "wc" + (opts.fav ? " fav" : "");
+  if(opts.ko) wc.title = word + " — " + opts.ko;
+  const label = document.createElement("span");
+  label.textContent = word;
+  wc.appendChild(label);
+  const rm = document.createElement("span");
+  rm.className = "rm"; rm.textContent = "×"; rm.title = "삭제";
+  rm.addEventListener("click", e=>{ e.stopPropagation(); opts.onRemove && opts.onRemove(); });
+  wc.appendChild(rm);
+  wc.addEventListener("click", ()=>lookup(word));
+  return wc;
+}
+
+function renderFav(){
+  const list = $("fav-list"); list.innerHTML = "";
+  $("fav-group").style.display = favorites.length ? "block" : "none";
+  favorites.forEach(f=>{
+    list.appendChild(makeChip(f.word, {fav:true, ko:f.ko, onRemove:()=>{
+      favorites = favorites.filter(x=>x.word!==f.word);
+      saveArr(FAV_KEY, favorites); renderFav(); updateStar();
+    }}));
+  });
+}
+
+function renderHist(){
+  const list = $("hist-list"); list.innerHTML = "";
+  $("hist-group").style.display = history.length ? "block" : "none";
+  history.forEach(w=>{
+    list.appendChild(makeChip(w, {onRemove:()=>{
+      history = history.filter(x=>x!==w);
+      saveArr(HIST_KEY, history); renderHist();
+    }}));
+  });
+}
+
+function setExample(word, text, real){
+  if(text){
+    const re = new RegExp("("+word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+"\\w*)","ig");
+    $("w-ex").innerHTML = esc(text).replace(re,"<b>$1</b>");
+  }else{
+    $("w-ex").innerHTML = "<b>"+esc(real||word)+"</b> 을(를) 넣어 나만의 문장을 만들어 보세요!";
+  }
+  $("ex-sec").style.display = "block";
+}
+
+// ---------- 사전 (정의/발음/예문) ----------
+async function fetchDict(word){
+  const r = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+  if(!r.ok) throw new Error("no dict");
+  const data = await r.json();
+  const e = data[0];
+  let phon = e.phonetic || (e.phonetics.find(p=>p.text)||{}).text || "";
+  let audio = (e.phonetics.find(p=>p.audio)||{}).audio || "";
+  let pos = "", def = "", example = "";
+  for(const m of e.meanings){
+    if(!pos) pos = m.partOfSpeech;
+    for(const d of m.definitions){
+      if(!def) def = d.definition;
+      if(!example && d.example){ example = d.example; }
+    }
+    if(def && example) break;
+  }
+  return {phon, audio, pos, def, example, real:e.word||word};
+}
+
+// ---------- 예문 보충 (사전에 예문이 없을 때) ----------
+async function fetchExample(word){
+  try{
+    const r = await fetch(`https://tatoeba.org/en/api_v0/search?query=${encodeURIComponent(word)}&from=eng&sort=relevance`);
+    if(!r.ok) return "";
+    const d = await r.json();
+    const re = new RegExp("\\b"+word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+"\\b","i");
+    const cands = (d.results||[]).map(x=>x.text).filter(t=>t && re.test(t) && t.length<=95);
+    cands.sort((a,b)=>a.length-b.length);
+    return cands[0] || "";
+  }catch(e){ return ""; }
+}
+
+// ---------- 한글 번역 ----------
+async function fetchKorean(word){
+  try{
+    const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|ko`);
+    const d = await r.json();
+    let t = (d.responseData && d.responseData.translatedText) || "";
+    // 더 나은 후보(짧은 한글) 있으면 사용
+    if(d.matches && d.matches.length){
+      const ko = d.matches.map(m=>m.translation).find(x=>/[가-힣]/.test(x));
+      if(ko) t = ko;
+    }
+    return t || "(뜻을 찾지 못했어요)";
+  }catch(e){ return "(번역을 불러오지 못했어요)"; }
+}
+
+// ---------- 이미지 ----------
+async function fetchImage(word){
+  // 1) Openverse 에서 관련 사진
+  try{
+    const r = await fetch(`https://api.openverse.org/v1/images/?q=${encodeURIComponent(word)}&page_size=1&mature=false`);
+    if(r.ok){
+      const d = await r.json();
+      if(d.results && d.results.length){
+        return d.results[0].thumbnail || d.results[0].url;
+      }
+    }
+  }catch(e){}
+  // 2) 대체: 키워드 기반 랜덤 이미지
+  return `https://loremflickr.com/640/360/${encodeURIComponent(word)}?lock=1`;
+}
+
+function setImage(url, word){
+  const box = $("imgbox");
+  box.innerHTML = `<div class="ph"><div class="big">🖼️</div>그림 불러오는 중...</div>`;
+  const img = new Image();
+  img.onload = ()=>{ box.innerHTML=""; box.appendChild(img); };
+  img.onerror = ()=>{
+    box.innerHTML = `<div class="ph"><div class="big">📚</div>'${esc(word)}' 그림을 찾지 못했어요</div>`;
+  };
+  img.alt = word;
+  img.src = url;
+}
+
+// ---------- 발음 재생 ----------
+function speak(){
+  const btn = $("speak");
+  btn.classList.add("playing");
+  const done = ()=>btn.classList.remove("playing");
+  if(currentAudio){
+    const a = new Audio(currentAudio.startsWith("//")?"https:"+currentAudio:currentAudio);
+    a.onended = done; a.onerror = ()=>{ speakTTS(); done(); };
+    a.play().catch(()=>{ speakTTS(); done(); });
+  }else{
+    speakTTS(); setTimeout(done, 900);
+  }
+}
+function speakTTS(){
+  if(!window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(currentWord);
+  u.lang = "en-US"; u.rate = .9;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+// ---------- 메인 ----------
+async function lookup(raw){
+  const word = (raw||"").trim().toLowerCase();
+  if(!word) return;
+  $("word").value = word;
+  currentWord = word; currentAudio = "";
+  $("card").style.display = "none";
+  $("status").style.display = "block";
+
+  // 이미지는 병렬로 먼저 시작
+  fetchImage(word).then(u=>setImage(u, word));
+
+  let dict;
+  try{
+    dict = await fetchDict(word);
+  }catch(e){
+    dict = {phon:"", audio:"", pos:"", def:"", example:"", real:word};
+  }
+  currentAudio = dict.audio;
+  currentWord = dict.real;
+  updateStar();
+  addHistory(dict.real);
+
+  $("w-word").textContent = dict.real;
+  $("w-phon").textContent = dict.phon || "";
+  $("w-pos").innerHTML = dict.pos ? `<span class="pos">${esc(dict.pos)}</span>` : "";
+  $("w-def").textContent = dict.def || "이 단어의 사전 정의를 찾지 못했어요. 철자를 확인해 주세요.";
+
+  // 예문: 사전 예문 우선, 없으면 Tatoeba 실제 예문 보충
+  setExample(word, dict.example, dict.real);
+  if(!dict.example){
+    fetchExample(word).then(ex=>{ if(ex && currentWord.toLowerCase()===dict.real.toLowerCase()) setExample(word, ex, dict.real); });
+  }
+
+  // 한글 뜻 + 가림막 리셋
+  const kowrap = $("kowrap");
+  kowrap.classList.remove("revealed");
+  $("w-ko").textContent = "...";
+  fetchKorean(word).then(t=>{
+    $("w-ko").textContent = t;
+    const f = favorites.find(x=>x.word===dict.real.toLowerCase());
+    if(f && !f.ko){ f.ko = t; saveArr(FAV_KEY, favorites); renderFav(); }
+  });
+
+  $("status").style.display = "none";
+  $("card").style.display = "block";
+}
+
+// ---------- 이벤트 ----------
+$("go").addEventListener("click", ()=>lookup($("word").value));
+$("word").addEventListener("keydown", e=>{ if(e.key==="Enter") lookup($("word").value); });
+$("speak").addEventListener("click", speak);
+$("kowrap").addEventListener("click", ()=> $("kowrap").classList.add("revealed"));
+$("chips").addEventListener("click", e=>{ if(e.target.tagName==="SPAN") lookup(e.target.textContent); });
+$("star").addEventListener("click", toggleFav);
+$("clear-hist").addEventListener("click", ()=>{ history=[]; saveArr(HIST_KEY,history); renderHist(); });
+$("clear-fav").addEventListener("click", ()=>{ favorites=[]; saveArr(FAV_KEY,favorites); renderFav(); updateStar(); });
+
+// 시작 시 저장된 목록 표시
+renderFav();
+renderHist();
+</script>
+</body>
+</html>
